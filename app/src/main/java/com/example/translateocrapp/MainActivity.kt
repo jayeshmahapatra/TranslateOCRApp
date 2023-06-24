@@ -8,6 +8,7 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.widget.Toast
 import android.view.SurfaceHolder
+import android.widget.Button
 
 // Import the required permissions
 import androidx.core.app.ActivityCompat
@@ -26,6 +27,9 @@ class MainActivity : AppCompatActivity(), SurfaceHolder.Callback {
     // Variable to keep track of permission request
     private var isPermissionRequested = false
 
+    // Variable to store Button object
+    private var captureButton: Button? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -40,6 +44,14 @@ class MainActivity : AppCompatActivity(), SurfaceHolder.Callback {
         // Initialize the SurfaceView object and connect it to the camera_view in the layout
         cameraView = findViewById(R.id.camera_view)
         cameraView?.holder?.addCallback(this)
+
+        // Initialize the Button object and connect it to the capture_button in the layout
+        captureButton = findViewById(R.id.capture_button)
+        // Set an onClickListener on the captureButton, for now it will just display a toast
+        captureButton?.setOnClickListener {
+            Toast.makeText(this, "Capture button clicked", Toast.LENGTH_SHORT).show()
+        }
+
     }
 
     // Function to check and request camera permissions
