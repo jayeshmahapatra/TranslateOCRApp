@@ -6,6 +6,7 @@ import android.view.SurfaceView
 import android.hardware.Camera
 import android.Manifest
 import android.content.pm.PackageManager
+import android.graphics.BitmapFactory
 import android.widget.Toast
 import android.view.SurfaceHolder
 import android.widget.Button
@@ -47,9 +48,9 @@ class MainActivity : AppCompatActivity(), SurfaceHolder.Callback {
 
         // Initialize the Button object and connect it to the capture_button in the layout
         captureButton = findViewById(R.id.capture_button)
-        // Set an onClickListener on the captureButton, for now it will just display a toast
+        // Set an onClickListener on the captureButton to captureButtonClicked
         captureButton?.setOnClickListener {
-            Toast.makeText(this, "Capture button clicked", Toast.LENGTH_SHORT).show()
+            captureButtonClicked()
         }
 
     }
@@ -178,5 +179,30 @@ class MainActivity : AppCompatActivity(), SurfaceHolder.Callback {
             // set the camera object to null
             camera = null
         }
+    }
+
+    // Function to handle the capture button click
+    fun captureButtonClicked() {
+        // Capture button has been clicked
+
+        // Check if the camera is open
+        if (camera != null) {
+            // If the camera is open then take a picture
+            camera?.takePicture(null, null, pictureCallback)
+
+
+        }
+    }
+
+    // Create a picture callback object
+    private val pictureCallback = Camera.PictureCallback { data, camera ->
+        // The picture has been taken
+
+        // Convert the picture data to a bitmap
+        val bitmap = BitmapFactory.decodeByteArray(data, 0, data.size)
+
+        // Display the bitmap to the user
+        // For now we will just display a toast
+        Toast.makeText(this, "Picture taken", Toast.LENGTH_SHORT).show()
     }
 }
