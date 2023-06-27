@@ -3,8 +3,10 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.CAMERA" />
+
     <uses-feature android:name="android.hardware.camera" />
     <uses-feature android:name="android.hardware.camera.autofocus" />
+
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <application
@@ -17,6 +19,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.TranslateOCRApp"
         tools:targetApi="31">
+        <activity
+            android:name=".PreviewActivity"
+            android:exported="false" />
         <activity
             android:name=".MainActivity"
             android:exported="true">

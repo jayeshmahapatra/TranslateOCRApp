@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.SurfaceView
 import android.hardware.Camera
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.BitmapFactory
 import android.widget.Toast
@@ -201,8 +202,13 @@ class MainActivity : AppCompatActivity(), SurfaceHolder.Callback {
         // Convert the picture data to a bitmap
         val bitmap = BitmapFactory.decodeByteArray(data, 0, data.size)
 
-        // Display the bitmap to the user
-        // For now we will just display a toast
-        Toast.makeText(this, "Picture taken", Toast.LENGTH_SHORT).show()
+        // Create an intent to start PreviewActivity
+        val intent = Intent(this, PreviewActivity::class.java)
+
+        // Pass the captured image bitmap to PreviewActivity
+        intent.putExtra("capturedImage", bitmap)
+
+        // Start PreviewActivity
+        startActivity(intent)
     }
 }
