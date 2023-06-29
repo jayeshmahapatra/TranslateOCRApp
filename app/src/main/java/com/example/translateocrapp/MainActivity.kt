@@ -14,6 +14,12 @@ import android.widget.Button
 
 // Import the required permissions
 import androidx.core.app.ActivityCompat
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class MainActivity : AppCompatActivity(), SurfaceHolder.Callback {
     // This is the main activity of the app
@@ -100,6 +106,33 @@ class MainActivity : AppCompatActivity(), SurfaceHolder.Callback {
 
             // Set the camera orientation to portrait
             camera?.setDisplayOrientation(90)
+
+            // Set the camera parameters
+            val parameters = camera?.parameters
+            parameters?.setRotation(90)
+
+            // Find the highest resolution supported by the camera
+            val supportedSizes = parameters?.supportedPictureSizes
+            var highestResolution: Camera.Size? = null
+            if (supportedSizes != null && supportedSizes.isNotEmpty()) {
+                highestResolution = supportedSizes[0]
+                for (size in supportedSizes) {
+                    if (size.width > highestResolution!!.width) {
+                        highestResolution = size
+                    }
+                }
+            }
+
+            // Set the picture size to the highest resolution
+            highestResolution?.let {
+                parameters?.setPictureSize(it.width, it.height)
+            }
+
+            // Set the focus mode to auto
+            parameters?.focusMode = Camera.Parameters.FOCUS_MODE_AUTO
+
+            // Set the camera parameters
+            camera?.parameters = parameters
 
             // Set the camera preview to the SurfaceView object
             try {
@@ -199,16 +232,35 @@ class MainActivity : AppCompatActivity(), SurfaceHolder.Callback {
     private val pictureCallback = Camera.PictureCallback { data, camera ->
         // The picture has been taken
 
-        // Convert the picture data to a bitmap
-        val bitmap = BitmapFactory.decodeByteArray(data, 0, data.size)
+        // Save the picture to a file or provide the file path in any other way
+        val imagePath = savePictureToFile(data)
 
-        // Create an intent to start PreviewActivity
-        val intent = Intent(this, PreviewActivity::class.java)
-
-        // Pass the captured image bitmap to PreviewActivity
-        intent.putExtra("capturedImage", bitmap)
-
-        // Start PreviewActivity
+        // Start the PreviewActivity and pass the image path
+        val intent = Intent(this@MainActivity, PreviewActivity::class.java)
+        intent.putExtra(PreviewActivity.EXTRA_IMAGE_PATH, imagePath)
         startActivity(intent)
+    }
+
+
+    private fun savePictureToFile(data: ByteArray): String {
+        val storageDir = File(filesDir, "pictures")
+        if (!storageDir.exists()) {
+            storageDir.mkdirs()
+        }
+
+        // Change this such that the file name is always "img_captured.jpg"
+        // If the file already exists, overwrite it
+        val fileName = "img_captured.jpg"
+        val file = File(storageDir, fileName)
+
+        try {
+            val fos = FileOutputStream(file)
+            fos.write(data)
+            fos.close()
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
+
+        return file.absolutePath
     }
 }
