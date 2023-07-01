@@ -205,15 +205,19 @@ class MainActivity : AppCompatActivity(), SurfaceHolder.Callback {
 
         // check if the camera is open
         if (camera != null) {
-            // stop the preview
-            camera?.stopPreview()
-
-            // release the camera
-            camera?.release()
-
-            // set the camera object to null
-            camera = null
+            releaseCamera()
         }
+    }
+
+    private fun releaseCamera() {
+        // Stop the preview
+        camera?.stopPreview()
+
+        // Release the camera
+        camera?.release()
+
+        // Set the camera object to null
+        camera = null
     }
 
     // Function to handle the capture button click
@@ -235,6 +239,9 @@ class MainActivity : AppCompatActivity(), SurfaceHolder.Callback {
 
         // Save the picture to a file or provide the file path in any other way
         val imagePath = savePictureToFile(data)
+
+        // Release the camera
+        releaseCamera()
 
         // Start the PreviewActivity and pass the image path
         val intent = Intent(this@MainActivity, PreviewActivity::class.java)
