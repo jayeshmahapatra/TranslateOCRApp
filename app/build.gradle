@@ -44,4 +44,7 @@ dependencies {
 
     // ML-Kit to recognize Latin script
     implementation 'com.google.mlkit:text-recognition:16.0.0'
+
+    // Coroutines
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2'
 }

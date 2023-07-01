@@ -3,13 +3,21 @@ package com.example.translateocrapp
 import android.app.Activity
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Rect
 import android.media.ExifInterface
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.widget.Button
 import android.widget.ImageView
 
+import com.google.mlkit.vision.text.Text
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
+import com.example.translateocrapp.OcrHelper
 
 class PreviewActivity : AppCompatActivity() {
     companion object {
@@ -18,6 +26,9 @@ class PreviewActivity : AppCompatActivity() {
 
     private lateinit var previewImageView: ImageView
     private lateinit var backButton: Button
+
+    // Create an instance of the OcrHelper class
+    private val ocrHelper = OcrHelper()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,18 +43,54 @@ class PreviewActivity : AppCompatActivity() {
         }
 
         val imagePath = intent.getStringExtra(EXTRA_IMAGE_PATH)
+
         if (imagePath != null) {
-            displayImage(imagePath)
+
+            // Get the bitmap from the image file
+            val bitmap = readImageFile(imagePath)
+
+            // Display the bitmap
+            displayBitmap(bitmap)
+
+            // Create a thread to run the OCR
+            // Perform OCR in a background thread
+            CoroutineScope(Dispatchers.Default).launch {
+                val ocrResult = ocrHelper.performOcr(bitmap)
+
+                withContext(Dispatchers.Main) {
+                    // Handle the OCR result here
+                    processOcrResult(ocrResult)
+                }
+            }
+
         } else {
             setResult(Activity.RESULT_CANCELED)
             finish()
         }
     }
 
-    private fun displayImage(imagePath: String) {
-        val bitmap = BitmapFactory.decodeFile(imagePath)
-        val rotatedBitmap = rotateBitmap(imagePath, bitmap)
-        previewImageView.setImageBitmap(rotatedBitmap)
+    // Create a function to process the OCR result
+    private fun processOcrResult(ocrResult: Map<Rect, Text.TextBlock>) {
+        // Log the OCR result with Rect and text
+        for ((rect, text) in ocrResult) {
+            Log.d("OCR", "Found text ${text.text} at $rect")
+        }
+
+
+    }
+
+    // Create a function to read image file and return bitmap
+    private fun readImageFile(imagePath: String): Bitmap {
+        val options = BitmapFactory.Options()
+        options.inPreferredConfig = Bitmap.Config.ARGB_8888
+        val bitmap = BitmapFactory.decodeFile(imagePath, options)
+        // Rotate the bitmap if required and return it
+        return rotateBitmap(imagePath, bitmap)
+    }
+
+    // Create a function to display the bitmap
+    private fun displayBitmap(bitmap: Bitmap) {
+        previewImageView.setImageBitmap(bitmap)
     }
 
     private fun rotateBitmap(imagePath: String, bitmap: Bitmap): Bitmap {
