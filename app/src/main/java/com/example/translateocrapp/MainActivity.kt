@@ -129,7 +129,8 @@ class MainActivity : AppCompatActivity(), SurfaceHolder.Callback {
             }
 
             // Set the focus mode to auto
-            parameters?.focusMode = Camera.Parameters.FOCUS_MODE_AUTO
+            parameters?.focusMode = Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE
+
 
             // Set the camera parameters
             camera?.parameters = parameters
