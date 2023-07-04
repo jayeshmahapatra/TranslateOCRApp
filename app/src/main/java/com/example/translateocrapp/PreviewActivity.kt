@@ -70,10 +70,10 @@ class PreviewActivity : AppCompatActivity() {
     }
 
     // Create a function to process the OCR result
-    private fun processOcrResult(ocrResult: Map<Rect, Text.TextBlock>) {
+    private fun processOcrResult(ocrResult: Map<Rect, Text.Element>) {
         // Log the OCR result with Rect and text
-        for ((rect, text) in ocrResult) {
-            Log.d("OCR", "Found text ${text.text} at $rect")
+        for ((rect, textElement) in ocrResult) {
+            Log.d("OCR", "Found text ${textElement.text} at $rect")
         }
 
 
