@@ -135,6 +135,7 @@ class MainActivity : AppCompatActivity(), SurfaceHolder.Callback {
             // Set the camera parameters
             camera?.parameters = parameters
 
+
             // Set the camera preview to the SurfaceView object
             try {
                 camera?.setPreviewDisplay(cameraView?.holder)
@@ -160,6 +161,8 @@ class MainActivity : AppCompatActivity(), SurfaceHolder.Callback {
     override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
         // The SurfaceView dimensions have changed
         // You might need to handle this event if necessary
+
+
     }
 
     override fun surfaceDestroyed(holder: SurfaceHolder) {
@@ -271,4 +274,6 @@ class MainActivity : AppCompatActivity(), SurfaceHolder.Callback {
 
         return file.absolutePath
     }
+
+
 }

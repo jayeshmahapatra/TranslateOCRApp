@@ -47,4 +47,8 @@ dependencies {
 
     // Coroutines
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2'
+
+    // ML-Kit to identify the language of the recognized text
+    implementation 'com.google.mlkit:language-id:17.0.4'
+
 }

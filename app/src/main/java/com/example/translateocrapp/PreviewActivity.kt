@@ -12,12 +12,17 @@ import android.widget.Button
 import android.widget.ImageView
 
 import com.google.mlkit.vision.text.Text
+
+// Import coroutines dependencies
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 import com.example.translateocrapp.OcrHelper
+import com.example.translateocrapp.LanguageRecognizer
+
 
 class PreviewActivity : AppCompatActivity() {
     companion object {
@@ -29,6 +34,13 @@ class PreviewActivity : AppCompatActivity() {
 
     // Create an instance of the OcrHelper class
     private val ocrHelper = OcrHelper()
+    private lateinit var ocrResult: Map<Rect, Text.Element>
+
+    // Create an instance of the LanguageRecognizer class
+    private val languageRecognizer = LanguageRecognizer()
+
+    // Job variable to keep track of the OCR job
+    private lateinit var ocrJob: Job
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -54,14 +66,28 @@ class PreviewActivity : AppCompatActivity() {
 
             // Create a thread to run the OCR
             // Perform OCR in a background thread
-            CoroutineScope(Dispatchers.Default).launch {
-                val ocrResult = ocrHelper.performOcr(bitmap)
+            ocrJob = CoroutineScope(Dispatchers.Default).launch {
+                ocrResult = ocrHelper.performOcr(bitmap)
 
                 withContext(Dispatchers.Main) {
                     // Handle the OCR result here
                     processOcrResult(ocrResult)
                 }
             }
+
+            // Wait for the OCR job to complete before starting the language identification job
+            ocrJob.invokeOnCompletion {
+                // Perform language identification in a separate background thread
+                CoroutineScope(Dispatchers.Default).launch {
+                    val languageResult = recognizeLanguageInBackground(ocrResult)
+
+                    withContext(Dispatchers.Main) {
+                        // Handle the language identification result here
+                        processLanguageResult(languageResult)
+                    }
+                }
+            }
+
 
         } else {
             setResult(Activity.RESULT_CANCELED)
@@ -76,6 +102,12 @@ class PreviewActivity : AppCompatActivity() {
             Log.d("OCR", "Found text ${textElement.text} at $rect")
         }
 
+    }
+
+    // Create a function to process the language identification result
+    private fun processLanguageResult(languageResult: String) {
+        // Handle the language identification result
+        Log.d("Language Identification", "Detected language: $languageResult")
 
     }
 
@@ -115,4 +147,12 @@ class PreviewActivity : AppCompatActivity() {
             bitmap
         }
     }
+
+    private suspend fun recognizeLanguageInBackground(ocrResult: Map<Rect, Text.Element>): String {
+        return withContext(Dispatchers.Default) {
+            // Perform language identification using LanguageRecognizer in a background thread
+            languageRecognizer.recognizeLanguage(ocrResult)
+        }
+    }
+
 }
