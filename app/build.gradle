@@ -51,4 +51,7 @@ dependencies {
     // ML-Kit to identify the language of the recognized text
     implementation 'com.google.mlkit:language-id:17.0.4'
 
+    // ML-Kit to translate the recognized text
+    implementation 'com.google.mlkit:translate:17.0.1'
+
 }

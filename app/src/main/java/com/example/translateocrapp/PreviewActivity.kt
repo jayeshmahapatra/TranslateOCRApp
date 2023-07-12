@@ -22,7 +22,7 @@ import kotlinx.coroutines.withContext
 
 import com.example.translateocrapp.OcrHelper
 import com.example.translateocrapp.LanguageRecognizer
-
+import com.example.translateocrapp.TextTranslator
 
 class PreviewActivity : AppCompatActivity() {
     companion object {
@@ -34,13 +34,27 @@ class PreviewActivity : AppCompatActivity() {
 
     // Create an instance of the OcrHelper class
     private val ocrHelper = OcrHelper()
-    private lateinit var ocrResult: Map<Rect, Text.Element>
 
     // Create an instance of the LanguageRecognizer class
     private val languageRecognizer = LanguageRecognizer()
 
+    // Create an instance of the TextTranslator class
+    private val textTranslator = TextTranslator()
+
+    // Create a variable to store the OCR result
+    private lateinit var ocrResult: Map<Rect, Text.Element>
+
+    // Create a variable to store the language code
+    private lateinit var languageCode: String
+
+    // Create a variable to store the translated ocr result
+    private lateinit var translatedOcrResult: Map<Rect, String>
+
     // Job variable to keep track of the OCR job
     private lateinit var ocrJob: Job
+
+    // Job variable to keep track of the language identification job
+    private lateinit var languageJob: Job
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -78,14 +92,28 @@ class PreviewActivity : AppCompatActivity() {
             // Wait for the OCR job to complete before starting the language identification job
             ocrJob.invokeOnCompletion {
                 // Perform language identification in a separate background thread
-                CoroutineScope(Dispatchers.Default).launch {
-                    val languageResult = recognizeLanguageInBackground(ocrResult)
+                languageJob = CoroutineScope(Dispatchers.Default).launch {
+                    languageCode = languageRecognizer.recognizeLanguage(ocrResult)
 
                     withContext(Dispatchers.Main) {
                         // Handle the language identification result here
-                        processLanguageResult(languageResult)
+                        processLanguageResult(languageCode)
                     }
                 }
+
+                languageJob.invokeOnCompletion {
+                    // Perform translation in a separate background thread
+                    CoroutineScope(Dispatchers.Default).launch {
+                        val translatedText = textTranslator.translateOcrResult(ocrResult, languageCode)
+
+                        withContext(Dispatchers.Main) {
+                            // Handle the translation result here
+                            processTranslationResult(translatedText)
+                        }
+                    }
+                }
+
+
             }
 
 
@@ -109,6 +137,14 @@ class PreviewActivity : AppCompatActivity() {
         // Handle the language identification result
         Log.d("Language Identification", "Detected language: $languageResult")
 
+    }
+
+    // Create a function to process the translation result
+    private fun processTranslationResult(translatedText: Map<Rect, String>) {
+        // Handle the translation result
+        for ((rect, text) in translatedText) {
+            Log.d("Translation", "Translated text $text at $rect")
+        }
     }
 
     // Create a function to read image file and return bitmap
@@ -145,13 +181,6 @@ class PreviewActivity : AppCompatActivity() {
             Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
         } else {
             bitmap
-        }
-    }
-
-    private suspend fun recognizeLanguageInBackground(ocrResult: Map<Rect, Text.Element>): String {
-        return withContext(Dispatchers.Default) {
-            // Perform language identification using LanguageRecognizer in a background thread
-            languageRecognizer.recognizeLanguage(ocrResult)
         }
     }
 
