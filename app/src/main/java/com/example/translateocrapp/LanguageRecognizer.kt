@@ -6,12 +6,14 @@ import com.google.mlkit.nl.languageid.LanguageIdentification
 import com.google.mlkit.nl.languageid.LanguageIdentificationOptions
 import com.google.mlkit.nl.languageid.LanguageIdentifier;
 import com.google.mlkit.vision.text.Text
+import com.google.android.gms.tasks.Task
+import com.google.android.gms.tasks.Tasks
+
 
 class LanguageRecognizer {
 
     private val languageIdentifierClient: LanguageIdentifier
     private val languageIdentifierOptions: LanguageIdentificationOptions
-
 
     init {
         // Initialize the language identifier client in the class constructor
@@ -22,27 +24,17 @@ class LanguageRecognizer {
     }
 
     fun recognizeLanguage(ocrMap: Map<Rect, Text.Element>): String {
-        val languageIds = mutableMapOf<String, Int>()
 
-        // Go through each element in the map and predict the language
-        for (element in ocrMap.values) {
-            val elementText = element.text
+        // Create a string of all text elements
+        val AllText = ocrMap.values.joinToString(separator = " ") { it.text }
 
-            // Identify the language of the element text
-            languageIdentifierClient.identifyLanguage(elementText)
-                .addOnSuccessListener { languageCode ->
-                    val count = languageIds.getOrDefault(languageCode, 0) + 1
-                    languageIds[languageCode] = count
-                }
-                .addOnFailureListener { exception ->
-                    // Handle the language identification failure
+        // Create a task to identify the language of the text
+        val task: Task<String> = languageIdentifierClient.identifyLanguage(AllText)
 
-                    // Log the exception
-                    Log.e("LanguageRecognizer","Exception thrown while identifying language: $exception")
-                }
-        }
+        // Get the language code
+        val languageCode: String = Tasks.await(task)
 
-        // Return the most common language across all elements
-        return languageIds.maxByOrNull { it.value }?.key ?: ""
+        // Return the language code
+        return languageCode
     }
 }
