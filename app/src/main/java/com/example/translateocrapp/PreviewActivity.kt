@@ -39,7 +39,7 @@ class PreviewActivity : AppCompatActivity() {
     private val languageRecognizer = LanguageRecognizer()
 
     // Create an instance of the TextTranslator class
-    private val textTranslator = TextTranslator()
+    private val textTranslator = TextTranslator(this)
 
     // Create a variable to store the OCR result
     private lateinit var ocrResult: Map<Rect, Text.Element>
