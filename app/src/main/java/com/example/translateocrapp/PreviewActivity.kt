@@ -42,10 +42,10 @@ class PreviewActivity : AppCompatActivity() {
     private val textTranslator = TextTranslator(this)
 
     // Create a variable to store the OCR result
-    private lateinit var ocrResult: Map<Rect, Text.Element>
+    private lateinit var ocrResult: Map<Rect, Text.Line>
 
-    // Create a variable to store the language code
-    private lateinit var languageCode: String
+    // Create a variable to store the language code for each line
+    private lateinit var languageCodeMap: Map<Rect, String>
 
     // Create a variable to store the translated ocr result
     private lateinit var translatedOcrResult: Map<Rect, String>
@@ -93,18 +93,18 @@ class PreviewActivity : AppCompatActivity() {
             ocrJob.invokeOnCompletion {
                 // Perform language identification in a separate background thread
                 languageJob = CoroutineScope(Dispatchers.Default).launch {
-                    languageCode = languageRecognizer.recognizeLanguage(ocrResult)
+                    languageCodeMap = languageRecognizer.recognizeLanguage(ocrResult)
 
                     withContext(Dispatchers.Main) {
                         // Handle the language identification result here
-                        processLanguageResult(languageCode)
+                        processLanguageResult(languageCodeMap)
                     }
                 }
 
                 languageJob.invokeOnCompletion {
                     // Perform translation in a separate background thread
                     CoroutineScope(Dispatchers.Default).launch {
-                        val translatedText = textTranslator.translateOcrResult(ocrResult, languageCode)
+                        val translatedText = textTranslator.translateOcrResult(ocrResult, languageCodeMap)
 
                         withContext(Dispatchers.Main) {
                             // Handle the translation result here
@@ -124,18 +124,20 @@ class PreviewActivity : AppCompatActivity() {
     }
 
     // Create a function to process the OCR result
-    private fun processOcrResult(ocrResult: Map<Rect, Text.Element>) {
+    private fun processOcrResult(ocrResult: Map<Rect, Text.Line>) {
         // Log the OCR result with Rect and text
-        for ((rect, textElement) in ocrResult) {
-            Log.d("OCR", "Found text ${textElement.text} at $rect")
+        for ((rect, textLine) in ocrResult) {
+            Log.d("OCR", "Found text ${textLine.text} at $rect")
         }
 
     }
 
     // Create a function to process the language identification result
-    private fun processLanguageResult(languageResult: String) {
+    private fun processLanguageResult(languageResultMap: Map<Rect, String>) {
         // Handle the language identification result
-        Log.d("Language Identification", "Detected language: $languageResult")
+        for ((rect, languageCode) in languageResultMap) {
+            Log.d("Language", "Language $languageCode at $rect")
+        }
 
     }
 

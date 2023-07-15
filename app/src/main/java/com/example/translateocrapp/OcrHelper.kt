@@ -23,34 +23,27 @@ class OcrHelper {
     }
 
 
-    fun performOcr(bitmap: Bitmap): Map<Rect, Text.Element> {
+    fun performOcr(bitmap: Bitmap): Map<Rect, Text.Line> {
         val image = InputImage.fromBitmap(bitmap, 0)
         val task: Task<Text> = textRecognizer.process(image)
         val result = Tasks.await(task)
         return extractTextBlocks(result)
     }
 
-    private fun extractTextBlocks(text: Text): Map<Rect, Text.Element> {
-        val elementMap = mutableMapOf<Rect, Text.Element>()
+    private fun extractTextBlocks(text: Text): Map<Rect, Text.Line> {
+        val lineMap = mutableMapOf<Rect, Text.Line>()
 
         for (textBlock in text.textBlocks) {
-             for (line in textBlock.lines) {
-                    for (element in line.elements) {
+            for (line in textBlock.lines) {
+                val rect = line.boundingBox
 
-                        val rect = element.boundingBox
-
-                        if (rect != null) {
-                            elementMap[rect] = element
-                        }
-
-
-
-                    }
-             }
+                if (rect != null) {
+                    lineMap[rect] = line
+                }
+            }
         }
 
-        return elementMap
-
+        return lineMap
     }
 
 

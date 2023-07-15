@@ -23,18 +23,30 @@ class LanguageRecognizer {
         languageIdentifierClient = LanguageIdentification.getClient(languageIdentifierOptions)
     }
 
-    fun recognizeLanguage(ocrMap: Map<Rect, Text.Element>): String {
+    fun recognizeLanguage(ocrMap: Map<Rect, Text.Line>): Map<Rect, String> {
 
-        // Create a string of all text elements
-        val AllText = ocrMap.values.joinToString(separator = " ") { it.text }
+        // Iterate through the map of OCR results and recognize the language of each line, store the results in a map
 
-        // Create a task to identify the language of the text
-        val task: Task<String> = languageIdentifierClient.identifyLanguage(AllText)
+        // Create a map to store the language of each line
+        val languageMap = mutableMapOf<Rect, String>()
 
-        // Get the language code
-        val languageCode: String = Tasks.await(task)
+        // Iterate through the map of OCR results
+        for ((rect, line) in ocrMap) {
+            // Get the text from the line
+            val text = line.text
 
-        // Return the language code
-        return languageCode
+            // Create a task to recognize the language of the line
+            val task: Task<String> = languageIdentifierClient.identifyLanguage(text)
+
+            // Wait for the task to complete
+            val result = Tasks.await(task)
+
+            // Store the language of the line in the map
+            languageMap[rect] = result
+        }
+
+        // Return the map of languages
+        return languageMap
+
     }
 }
