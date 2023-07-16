@@ -23,6 +23,7 @@ import kotlinx.coroutines.withContext
 import com.example.translateocrapp.OcrHelper
 import com.example.translateocrapp.LanguageRecognizer
 import com.example.translateocrapp.TextTranslator
+import com.example.translateocrapp.BitmapAnnotator
 
 class PreviewActivity : AppCompatActivity() {
     companion object {
@@ -31,6 +32,8 @@ class PreviewActivity : AppCompatActivity() {
 
     private lateinit var previewImageView: ImageView
     private lateinit var backButton: Button
+
+    private lateinit var bitmap: Bitmap
 
     // Create an instance of the OcrHelper class
     private val ocrHelper = OcrHelper()
@@ -73,7 +76,7 @@ class PreviewActivity : AppCompatActivity() {
         if (imagePath != null) {
 
             // Get the bitmap from the image file
-            val bitmap = readImageFile(imagePath)
+            bitmap = readImageFile(imagePath)
 
             // Display the bitmap
             displayBitmap(bitmap)
@@ -147,6 +150,13 @@ class PreviewActivity : AppCompatActivity() {
         for ((rect, text) in translatedText) {
             Log.d("Translation", "Translated text $text at $rect")
         }
+
+        // Get annotated bitmap
+        bitmap = BitmapAnnotator.annotateBitmap(bitmap, ocrResult, translatedText)
+
+        // Display the annotated bitmap
+        displayBitmap(bitmap)
+
     }
 
     // Create a function to read image file and return bitmap
