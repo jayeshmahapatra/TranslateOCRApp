@@ -1,278 +1,215 @@
 package com.example.translateocrapp
 
-import androidx.appcompat.app.AppCompatActivity
-import android.os.Bundle
-import android.view.SurfaceView
-import android.hardware.Camera
 import android.Manifest
+import android.content.ContentValues
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.BitmapFactory
-import android.widget.Toast
-import android.view.SurfaceHolder
-import android.widget.Button
-
-// Import the required permissions
+import android.os.Build
+import android.os.Bundle
+import android.provider.MediaStore
+import androidx.appcompat.app.AppCompatActivity
+import androidx.camera.core.ImageCapture
+import androidx.camera.video.Recorder
+import androidx.camera.video.Recording
+import androidx.camera.video.VideoCapture
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.core.Preview
+import androidx.camera.core.CameraSelector
+import android.util.Log
+import androidx.camera.core.ImageAnalysis
+import androidx.camera.core.ImageCaptureException
+import androidx.camera.core.ImageProxy
+import androidx.camera.video.FallbackStrategy
+import androidx.camera.video.MediaStoreOutputOptions
+import androidx.camera.video.Quality
+import androidx.camera.video.QualitySelector
+import androidx.camera.video.VideoRecordEvent
+import androidx.core.content.PermissionChecker
+import com.example.translateocrapp.databinding.ActivityMainBinding
 import java.io.File
-import java.io.FileOutputStream
-import java.io.IOException
+import java.nio.ByteBuffer
 import java.text.SimpleDateFormat
-import java.util.Date
 import java.util.Locale
 
-class MainActivity : AppCompatActivity(), SurfaceHolder.Callback {
+typealias LumaListener = (luma: Double) -> Unit
+
+class MainActivity : AppCompatActivity() {
     // This is the main activity of the app
 
-    // Variable to store the SurfaceView object
-    private var cameraView: SurfaceView? = null
 
-    // Camera permission request code
-    private val CAMERA_PERMISSION_REQUEST_CODE = 100
+    private lateinit var viewBinding: ActivityMainBinding
 
-    private var camera: Camera? = null
+    private var imageCapture: ImageCapture? = null
 
-    // Variable to keep track of permission request
-    private var isPermissionRequested = false
+    private lateinit var cameraExecutor: ExecutorService
 
-    // Variable to store Button object
-    private var captureButton: Button? = null
+    private val activityResultLauncher =
+        registerForActivityResult(
+            ActivityResultContracts.RequestMultiplePermissions())
+        { permissions ->
+            // Handle Permission granted/rejected
+            var permissionGranted = true
+            permissions.entries.forEach {
+                if (it.key in REQUIRED_PERMISSIONS && it.value == false)
+                    permissionGranted = false
+            }
+            if (!permissionGranted) {
+                Toast.makeText(baseContext,
+                    "Permission request denied",
+                    Toast.LENGTH_SHORT).show()
+            } else {
+                startCamera()
+            }
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        viewBinding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(viewBinding.root)
 
-        // Check for camera permissions
-        if (camera == null){
-            checkPermissions()
-
-        }
-
-
-        // Initialize the SurfaceView object and connect it to the camera_view in the layout
-        cameraView = findViewById(R.id.camera_view)
-        cameraView?.holder?.addCallback(this)
-
-        // Initialize the Button object and connect it to the capture_button in the layout
-        captureButton = findViewById(R.id.capture_button)
-        // Set an onClickListener on the captureButton to captureButtonClicked
-        captureButton?.setOnClickListener {
-            captureButtonClicked()
-        }
-
-    }
-
-    // Function to check and request camera permissions
-    private fun checkPermissions() {
-        // Check if the camera permission is already available
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
-            // If the permission is already available then set up the camera
-            setupCamera()
+        // Request camera permissions
+        if (allPermissionsGranted()) {
+            startCamera()
         } else {
-            // If the permission is not available and it is not being requested then request the permission
-            if (!isPermissionRequested) {
-                // Request the camera permission
-                ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CAMERA), CAMERA_PERMISSION_REQUEST_CODE)
-            }
-
-            // Mark permission as requested
-            isPermissionRequested = true
-
+            requestPermissions()
         }
+
+        // Set up the listeners for take photo and video capture buttons
+        viewBinding.imageCaptureButton.setOnClickListener { takePhoto() }
+
+        cameraExecutor = Executors.newSingleThreadExecutor()
     }
 
-    // Function to handle the permission request response
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        // Check if the request code is for camera permission
-        if (requestCode == CAMERA_PERMISSION_REQUEST_CODE) {
-            // Check if the permission is granted
-            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                // If the permission is granted then set up the camera
-                setupCamera()
-            } else {
-                // If the permission is not granted then display a toast
-                Toast.makeText(this, "Camera permission denied", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
+    private fun takePhoto() {
 
-    // Function to set up the camera and connect it to the SurfaceView object
-    private fun setupCamera() {
-        // check if the device has a camera
-        if (packageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA)) {
-            // If the device has a camera then get the camera object
-            camera = Camera.open()
+        Log.d(TAG, "takePhoto: called")
 
-            // Set the camera orientation to portrait
-            camera?.setDisplayOrientation(90)
+        // Get a stable reference of the modifiable image capture use case
+        val imageCapture = imageCapture ?: return
 
-            // Set the camera parameters
-            val parameters = camera?.parameters
-            parameters?.setRotation(90)
+        // Create time stamped name and MediaStore entry.
+        val fileName = "translateocrapp.jpg"
 
-            // Find the highest resolution supported by the camera
-            val supportedSizes = parameters?.supportedPictureSizes
-            var highestResolution: Camera.Size? = null
-            if (supportedSizes != null && supportedSizes.isNotEmpty()) {
-                highestResolution = supportedSizes[0]
-                for (size in supportedSizes) {
-                    if (size.width > highestResolution!!.width) {
-                        highestResolution = size
-                    }
+        // Get the output directory for saving the image
+        val outputDirectory = getOutputDirectory()
+
+        // Create the file for the image capture
+        val photoFile = File(outputDirectory, fileName)
+
+        // Create output options object which contains the file to save the image
+        val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
+
+
+        Log.d(TAG, "takePhoto: contentValues created")
+
+        Log.d(TAG, "takePhoto: outputOptions created")
+        // Set up image capture listener, which is triggered after photo has
+        // been taken
+        imageCapture.takePicture(
+            outputOptions,
+            ContextCompat.getMainExecutor(this),
+            object : ImageCapture.OnImageSavedCallback {
+                override fun onError(exc: ImageCaptureException) {
+                    Log.e(TAG, "Photo capture failed: ${exc.message}", exc)
+                }
+
+                override fun
+                        onImageSaved(output: ImageCapture.OutputFileResults){
+                    val msg = "Photo capture succeeded: ${output.savedUri}"
+
+                    // Start the PreviewActivity and pass the image path
+                    val intent = Intent(this@MainActivity, PreviewActivity::class.java)
+                    intent.putExtra(PreviewActivity.EXTRA_IMAGE_PATH, photoFile.absolutePath)
+                    startActivity(intent)
+
+
+
                 }
             }
+        )
 
-            // Set the picture size to the highest resolution
-            highestResolution?.let {
-                parameters?.setPictureSize(it.width, it.height)
-            }
+    }
 
-            // Set the focus mode to auto
-            parameters?.focusMode = Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE
+    // Function to get the app's private directory for saving images
+    private fun getOutputDirectory(): File {
+        val mediaDir = externalMediaDirs.firstOrNull()?.let {
+            File(it, resources.getString(R.string.app_name)).apply { mkdirs() }
+        }
+        return if (mediaDir != null && mediaDir.exists())
+            mediaDir else filesDir
+    }
 
+    private fun startCamera() {
 
-            // Set the camera parameters
-            camera?.parameters = parameters
+        val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
 
+        cameraProviderFuture.addListener({
+            // Used to bind the lifecycle of cameras to the lifecycle owner
+            val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
 
-            // Set the camera preview to the SurfaceView object
+            // Preview
+            val preview = Preview.Builder()
+                .build()
+                .also {
+                    it.setSurfaceProvider(viewBinding.viewFinder.surfaceProvider)
+                }
+
+            imageCapture = ImageCapture.Builder()
+                .build()
+
+            // Select back camera as a default
+            val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+
             try {
-                camera?.setPreviewDisplay(cameraView?.holder)
-            } catch (e: Exception) {
-                e.printStackTrace()
+                // Unbind use cases before rebinding
+                cameraProvider.unbindAll()
+
+                // Bind use cases to camera
+                cameraProvider.bindToLifecycle(
+                    this, cameraSelector, preview, imageCapture)
+
+            } catch(exc: Exception) {
+                Log.e(TAG, "Use case binding failed", exc)
             }
 
-            // Start the preview
-            camera?.startPreview()
-
-        } else {
-            // If the device does not have a camera then display a toast
-            Toast.makeText(this, "No camera detected", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    override fun surfaceCreated(holder: SurfaceHolder) {
-        // The SurfaceView holder has been created
-        // You can now set up the camera preview
-        checkPermissions()
-    }
-
-    override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
-        // The SurfaceView dimensions have changed
-        // You might need to handle this event if necessary
-
+        }, ContextCompat.getMainExecutor(this))
 
     }
 
-    override fun surfaceDestroyed(holder: SurfaceHolder) {
-        // The SurfaceView holder has been destroyed
-        // You might need to handle this event if necessary
-
-        // check if the camera is open
-        if (camera != null) {
-            // stop the preview
-            camera?.stopPreview()
-
-            // release the camera
-            camera?.release()
-
-            // set the camera object to null
-            camera = null
-        }
+    private fun requestPermissions() {
+        activityResultLauncher.launch(REQUIRED_PERMISSIONS)
     }
 
-    override fun onResume() {
-        super.onResume()
-
-        // check if camera is open, if not then check for permissions and set it up
-        if (camera == null) {
-            // Check for camera permissions
-            checkPermissions()
-
-            // If permission was requested and not granted, show a dialog or a message
-            if (isPermissionRequested && ActivityCompat.checkSelfPermission(
-                    this,
-                    Manifest.permission.CAMERA
-                ) != PackageManager.PERMISSION_GRANTED
-            ) {
-                // Show dialog or message to inform the user that camera permission is required
-                Toast.makeText(this, "Camera permission is required", Toast.LENGTH_SHORT).show()
-            }
-        }
-
+    private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {
+        ContextCompat.checkSelfPermission(
+            baseContext, it) == PackageManager.PERMISSION_GRANTED
     }
 
-    override fun onPause() {
-        super.onPause()
-
-        // check if the camera is open
-        if (camera != null) {
-            releaseCamera()
-        }
-    }
-
-    private fun releaseCamera() {
-        // Stop the preview
-        camera?.stopPreview()
-
-        // Release the camera
-        camera?.release()
-
-        // Set the camera object to null
-        camera = null
-    }
-
-    // Function to handle the capture button click
-    fun captureButtonClicked() {
-        // Capture button has been clicked
-
-        // Check if the camera is open
-        if (camera != null) {
-            // If the camera is open then take a picture
-            camera?.takePicture(null, null, pictureCallback)
-
-
-        }
-    }
-
-    // Create a picture callback object
-    private val pictureCallback = Camera.PictureCallback { data, camera ->
-        // The picture has been taken
-
-        // Save the picture to a file or provide the file path in any other way
-        val imagePath = savePictureToFile(data)
-
-        // Release the camera
-        releaseCamera()
-
-        // Start the PreviewActivity and pass the image path
-        val intent = Intent(this@MainActivity, PreviewActivity::class.java)
-        intent.putExtra(PreviewActivity.EXTRA_IMAGE_PATH, imagePath)
-        startActivity(intent)
+    override fun onDestroy() {
+        super.onDestroy()
+        cameraExecutor.shutdown()
     }
 
 
-    private fun savePictureToFile(data: ByteArray): String {
-        val storageDir = File(filesDir, "pictures")
-        if (!storageDir.exists()) {
-            storageDir.mkdirs()
-        }
 
-        // Change this such that the file name is always "img_captured.jpg"
-        // If the file already exists, overwrite it
-        val fileName = "img_captured.jpg"
-        val file = File(storageDir, fileName)
-
-        try {
-            val fos = FileOutputStream(file)
-            fos.write(data)
-            fos.close()
-        } catch (e: IOException) {
-            e.printStackTrace()
-        }
-
-        return file.absolutePath
+    companion object {
+        private const val TAG = "CameraXApp"
+        private const val FILENAME_FORMAT = "yyyy-MM-dd-HH-mm-ss-SSS"
+        private val REQUIRED_PERMISSIONS =
+            mutableListOf (
+                Manifest.permission.CAMERA,
+                Manifest.permission.RECORD_AUDIO
+            ).apply {
+                if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
+                    add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                }
+            }.toTypedArray()
     }
 
 
