@@ -49,13 +49,13 @@ class PreviewActivity : AppCompatActivity() {
     private val textTranslator = TextTranslator(this)
 
     // Create a variable to store the OCR result
-    private lateinit var ocrResult: Map<Rect, Text.Line>
+    private lateinit var ocrResultMap: Map<Rect, Text.Line>
 
     // Create a variable to store the language detected
     private lateinit var languageCode: String
 
     // Create a variable to store the translated ocr result
-    private lateinit var translatedOcrResult: Map<Rect, String>
+    private lateinit var translatedOcrResultMap: Map<Rect, String>
 
     // Job variable to keep track of the OCR job
     private lateinit var ocrJob: Job
@@ -108,11 +108,11 @@ class PreviewActivity : AppCompatActivity() {
             // Create a thread to run the OCR
             // Perform OCR in a background thread
             ocrJob = CoroutineScope(Dispatchers.Default).launch {
-                ocrResult = ocrHelper.performOcr(bitmap)
+                ocrResultMap = ocrHelper.performOcr(bitmap)
 
                 withContext(Dispatchers.Main) {
                     // Handle the OCR result here
-                    processOcrResult(ocrResult)
+                    processOcrResult(ocrResultMap)
                 }
             }
 
@@ -120,7 +120,7 @@ class PreviewActivity : AppCompatActivity() {
             ocrJob.invokeOnCompletion {
                 // Perform language identification in a separate background thread
                 languageJob = CoroutineScope(Dispatchers.Default).launch {
-                    languageCode = languageRecognizer.recognizeLanguage(ocrResult)
+                    languageCode = languageRecognizer.recognizeLanguage(ocrResultMap)
 
                     withContext(Dispatchers.Main) {
                         // Handle the language identification result here
@@ -131,11 +131,11 @@ class PreviewActivity : AppCompatActivity() {
                 languageJob.invokeOnCompletion {
                     // Perform translation in a separate background thread
                     CoroutineScope(Dispatchers.Default).launch {
-                        val translatedText = textTranslator.translateOcrResult(ocrResult, languageCode)
+                        translatedOcrResultMap = textTranslator.translateOcrResult(ocrResultMap, languageCode)
 
                         withContext(Dispatchers.Main) {
                             // Handle the translation result here
-                            processTranslationResult(translatedText)
+                            processTranslationResult(translatedOcrResultMap)
                         }
                     }
                 }
@@ -151,9 +151,9 @@ class PreviewActivity : AppCompatActivity() {
     }
 
     // Create a function to process the OCR result
-    private fun processOcrResult(ocrResult: Map<Rect, Text.Line>) {
+    private fun processOcrResult(ocrResultMap: Map<Rect, Text.Line>) {
         // Log the OCR result with Rect and text
-        for ((rect, textLine) in ocrResult) {
+        for ((rect, textLine) in ocrResultMap) {
             Log.d("OCR", "Found text ${textLine.text} at $rect")
         }
 
@@ -174,7 +174,7 @@ class PreviewActivity : AppCompatActivity() {
         }
 
         // Get annotated bitmap
-        bitmap = BitmapAnnotator.annotateBitmap(bitmap, ocrResult, translatedText)
+        bitmap = BitmapAnnotator.annotateBitmap(bitmap, ocrResultMap, translatedText)
 
         // Display the annotated bitmap
         displayBitmap(bitmap)
