@@ -7,9 +7,13 @@ import android.graphics.Rect
 import android.media.ExifInterface
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.widget.Button
 import android.widget.ImageView
+import android.widget.ProgressBar
+import androidx.appcompat.app.AlertDialog
 
 import com.google.mlkit.vision.text.Text
 
@@ -59,6 +63,12 @@ class PreviewActivity : AppCompatActivity() {
     // Job variable to keep track of the language identification job
     private lateinit var languageJob: Job
 
+    // Create a progress dialog
+    private lateinit var progressBar: ProgressBar
+
+    // AlertDialog to show download progress
+    private var progressDialog: AlertDialog? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_preview)
@@ -72,6 +82,20 @@ class PreviewActivity : AppCompatActivity() {
         }
 
         val imagePath = intent.getStringExtra(EXTRA_IMAGE_PATH)
+
+        // Initialize the progress bar
+        progressBar = ProgressBar(this).apply {
+            isIndeterminate = true
+        }
+
+        // Show the progress dialog saying that translation is in progress
+        Handler(Looper.getMainLooper()).post {
+            progressDialog = AlertDialog.Builder(this)
+                .setTitle("Translating ...")
+                .setCancelable(false)
+                .setView(progressBar)
+                .show()
+        }
 
         if (imagePath != null) {
 
@@ -154,6 +178,12 @@ class PreviewActivity : AppCompatActivity() {
 
         // Display the annotated bitmap
         displayBitmap(bitmap)
+
+        // Dismiss the progress dialog
+        Handler(Looper.getMainLooper()).post {
+            progressDialog?.dismiss()
+            progressDialog = null
+        }
 
     }
 
