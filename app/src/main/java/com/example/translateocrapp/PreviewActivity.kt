@@ -47,8 +47,8 @@ class PreviewActivity : AppCompatActivity() {
     // Create a variable to store the OCR result
     private lateinit var ocrResult: Map<Rect, Text.Line>
 
-    // Create a variable to store the language code for each line
-    private lateinit var languageCodeMap: Map<Rect, String>
+    // Create a variable to store the language detected
+    private lateinit var languageCode: String
 
     // Create a variable to store the translated ocr result
     private lateinit var translatedOcrResult: Map<Rect, String>
@@ -96,18 +96,18 @@ class PreviewActivity : AppCompatActivity() {
             ocrJob.invokeOnCompletion {
                 // Perform language identification in a separate background thread
                 languageJob = CoroutineScope(Dispatchers.Default).launch {
-                    languageCodeMap = languageRecognizer.recognizeLanguage(ocrResult)
+                    languageCode = languageRecognizer.recognizeLanguage(ocrResult)
 
                     withContext(Dispatchers.Main) {
                         // Handle the language identification result here
-                        processLanguageResult(languageCodeMap)
+                        processLanguageResult(languageCode)
                     }
                 }
 
                 languageJob.invokeOnCompletion {
                     // Perform translation in a separate background thread
                     CoroutineScope(Dispatchers.Default).launch {
-                        val translatedText = textTranslator.translateOcrResult(ocrResult, languageCodeMap)
+                        val translatedText = textTranslator.translateOcrResult(ocrResult, languageCode)
 
                         withContext(Dispatchers.Main) {
                             // Handle the translation result here
@@ -136,11 +136,9 @@ class PreviewActivity : AppCompatActivity() {
     }
 
     // Create a function to process the language identification result
-    private fun processLanguageResult(languageResultMap: Map<Rect, String>) {
+    private fun processLanguageResult(languageResult: String) {
         // Handle the language identification result
-        for ((rect, languageCode) in languageResultMap) {
-            Log.d("Language", "Language $languageCode at $rect")
-        }
+        Log.d("Language", "Language detected is $languageCode")
 
     }
 

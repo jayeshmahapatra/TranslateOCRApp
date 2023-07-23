@@ -154,7 +154,7 @@ class TextTranslator(private val context: Context) {
     }
 
     // Create a function to translate ocr result
-    fun translateOcrResult(ocrResult: Map<Rect, Text.Line>, languageCodeMap: Map<Rect, String> ): Map<Rect, String> {
+    fun translateOcrResult(ocrResult: Map<Rect, Text.Line>, languageCode: String ): Map<Rect, String> {
 
         // Create a map to store the translated result
         val translatedResult = mutableMapOf<Rect, String>()
@@ -162,15 +162,8 @@ class TextTranslator(private val context: Context) {
         // Iterate through the ocr result
         for ((rect, line) in ocrResult) {
 
-            // Get the language code for the current line
-            val languageCode = languageCodeMap[rect]
-
-            // Translate the line to english if the language code is not "en" or "und", else return the text
-            val translatedText = if (languageCode != "en" && languageCode != "und") {
-                translateTextToEnglish(line.text, languageCode!!)
-            } else {
-                line.text
-            }
+            // Translate the line to english
+            val translatedText = translateTextToEnglish(line.text, languageCode)
 
             // Add the translated text to the map
             translatedResult[rect] = translatedText

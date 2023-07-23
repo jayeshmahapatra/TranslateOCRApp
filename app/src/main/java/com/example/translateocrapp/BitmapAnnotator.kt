@@ -21,22 +21,33 @@ object BitmapAnnotator {
         // Get a canvas to draw on the bitmap
         val canvas = Canvas(annotatedBitmap)
 
-        // Get paint objects to draw on the bitmap
+        // Create a paint object to draw the rectangles
         val rectPaint = Paint()
-        val textPaint = TextPaint()
+
+        val rectFMap = mutableMapOf<Rect, RectF>()
 
         // Iterate over ocrResult and translatedOcrResult and draw the translated text on the bitmap
         for ((rect, line) in ocrResult) {
-            // Get the translated text from the translatedOcrResult map
-            val translatedText = translatedOcrResult[rect]
 
             // Draw a filled rectangle on the bitmap in rect coordinates
-
             val clampedRect = rect.clampToBitmap(bitmap) // Helper function to clamp the rect to the bitmap
             val rectF = RectF(clampedRect)
             rectPaint.color = getAverageColor(bitmap, clampedRect)
             canvas.drawRect(rectF, rectPaint)
 
+            // Store the rectF in the rectFMap
+            rectFMap[rect] = rectF
+        }
+
+        // Create a paint object to draw the text
+        val textPaint = TextPaint()
+        for ((rect, line) in ocrResult) {
+
+            // Get the translated text from the translatedOcrResult map
+            val translatedText = translatedOcrResult[rect]
+
+            // Get the rectF from the rectFMap
+            val rectF = rectFMap[rect]!!
 
             // Draw the translated text on the bitmap in rect coordinates
             // Adjust the text size to fit the rectangle
