@@ -60,7 +60,7 @@ class TextTranslator(private val context: Context) {
 
     // Create a function to translate text
     // sourceLanguageCode is the language code can have two values: "sv" or "de"
-    fun translateTextToEnglish(text: String, sourceLanguageCode: String): String {
+    private fun translateTextToEnglish(text: String, sourceLanguageCode: String): String {
 
         // Check if the source language code is "sv" or "de", if not return the text
         if (sourceLanguageCode != "sv" && sourceLanguageCode != "de") {
@@ -108,7 +108,7 @@ class TextTranslator(private val context: Context) {
 
         Handler(Looper.getMainLooper()).post {
             progressDialog = AlertDialog.Builder(context)
-                .setTitle("Downloading Translation Model")
+                .setTitle("Downloading Translation Model (Please Be on Wifi)")
                 .setCancelable(false)
                 .setView(progressBar)
                 .show()

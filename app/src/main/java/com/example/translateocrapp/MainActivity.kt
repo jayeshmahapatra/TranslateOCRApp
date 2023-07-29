@@ -86,6 +86,7 @@ class MainActivity : AppCompatActivity() {
         cameraExecutor = Executors.newSingleThreadExecutor()
     }
 
+
     private fun takePhoto() {
 
         Log.d(TAG, "takePhoto: called")
