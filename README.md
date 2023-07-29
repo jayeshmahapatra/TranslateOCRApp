@@ -11,7 +11,8 @@ You can either download the apk from the [releases](https://github.com/jayeshmah
 
 Point the camera at the text you want to translate and capture an image by clicking the capture button. After the capture, the app will translate the text and display an image with the translated text.
 
-<<<<<<< HEAD
+**Note**: The app needs wifi internet the first time it's used to download and store the translation models.
+
 <figure>
     <img src="media/translation_app_example_use.gif"
          alt="A gif of using the translation app to translate an advertisement poster"
@@ -19,9 +20,6 @@ Point the camera at the text you want to translate and capture an image by click
          height = "500">
     <figcaption>Translating an advertisement poster using the app</figcaption>
 </figure>
-=======
-**Note**: The app needs wifi internet the first time it's used to download and store the translation models.
->>>>>>> ceaab607e26bb2bca23a13b0de630d40cdd564bc
 
 ## Workflow
 
