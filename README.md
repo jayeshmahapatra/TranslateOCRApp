@@ -11,6 +11,14 @@ You can either download the apk from the [releases](https://github.com/jayeshmah
 
 Point the camera at the text you want to translate and capture an image by clicking the capture button. After the capture, the app will translate the text and display an image with the translated text.
 
+<figure>
+    <img src="media/translation_app_example_use.gif"
+         alt="A gif of using the translation app to translate an advertisement poster"
+         width = "300"
+         height = "500">
+    <figcaption>Translating an advertisement poster using the app</figcaption>
+</figure>
+
 ## Workflow
 
 The TranslateOCRApp works in the following steps:
