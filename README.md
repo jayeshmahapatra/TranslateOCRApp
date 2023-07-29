@@ -11,6 +11,8 @@ You can either download the apk from the [releases](https://github.com/jayeshmah
 
 Point the camera at the text you want to translate and capture an image by clicking the capture button. After the capture, the app will translate the text and display an image with the translated text.
 
+**Note**: The app needs wifi internet the first time it's used to download and store the translation models.
+
 ## Workflow
 
 The TranslateOCRApp works in the following steps:
@@ -19,7 +21,7 @@ The TranslateOCRApp works in the following steps:
 
 2. **Optical Character Recognition (OCR):** After the image is captured, the `PreviewActivity` is launched, where the raw image is displayed. The app then utilizes Google ML Kit's OCR capabilities provided by the `OcrHelper` class to extract all the text present in the image.
 
-3. **Language Identification:** Once the text is extracted using OCR, the `LanguageRecognizer` class is employed to identify the language of the extracted text. The app determines if the text is in Swedish, German, or an undetermined language.
+3. **Language Identification:** Once the text is extracted using OCR, the `LanguageRecognizer` class is employed to identify the language of the extracted text. The app determines if the text is in Swedish, German, or an undetermined language.  The class also manages translation models, such as downloading and storing them locally as needed.
 
 4. **Translation:** Based on the identified language, the app decides which language translation model to use. The `TextTranslator` class handles the downloading and loading of the appropriate translation model (German if undetermined). The text is then translated into English.
 
