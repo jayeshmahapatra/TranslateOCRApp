@@ -5,7 +5,7 @@ them into english. The app leverages [Google ML-Kit](https://developers.google.c
 
 ## Installing the App
 
-You can either download the apk from the [releases](link-to-releases) or build the apk yourself using Android Studio.
+You can either download the apk from the [releases](https://github.com/jayeshmahapatra/TranslateOCRApp/releases) or build the apk yourself using Android Studio.
 
 ## How to Use
 
