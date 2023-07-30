@@ -16,7 +16,7 @@ Point the camera at the text you want to translate and capture an image by click
 <figure>
     <img src="media/translation_app_example_use.gif"
          alt="A gif of using the translation app to translate an advertisement poster"
-         width = "300"
+         width = "280"
          height = "500">
     <figcaption>Translating an advertisement poster using the app</figcaption>
 </figure>
@@ -29,9 +29,9 @@ The TranslateOCRApp works in the following steps:
 
 2. **Optical Character Recognition (OCR):** After the image is captured, the `PreviewActivity` is launched, where the raw image is displayed. The app then utilizes Google ML Kit's OCR capabilities provided by the `OcrHelper` class to extract all the text present in the image.
 
-3. **Language Identification:** Once the text is extracted using OCR, the `LanguageRecognizer` class is employed to identify the language of the extracted text. The app determines if the text is in Swedish, German, or an undetermined language.  The class also manages translation models, such as downloading and storing them locally as needed.
+3. **Language Identification:** Once the text is extracted using OCR, the `LanguageRecognizer` class is employed to identify the language of the extracted text. The app determines if the text is in Swedish, German, or an undetermined language.
 
-4. **Translation:** Based on the identified language, the app decides which language translation model to use. The `TextTranslator` class handles the downloading and loading of the appropriate translation model (German if undetermined). The text is then translated into English.
+4. **Translation:** Based on the identified language, the app decides which language translation model to use. The `TextTranslator` class handles the downloading and loading of the appropriate translation model (German if undetermined). The text is then translated into English. The class also manages translation models, such as downloading and storing them locally as needed.
 
 5. **Image Transformation:** The original image, along with the overlay of the translated text, is displayed to the user in the `PreviewActivity`. The `BitmapAnnotator` class takes care of overlaying the translated text on top of the original image. This is done by blurring the original text and replacing them with their translations.
 
