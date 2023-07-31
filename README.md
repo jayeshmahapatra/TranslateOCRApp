@@ -1,7 +1,7 @@
 # TranslateOCRApp
 
 TranslateOCRApp is an Android application that allows users to click pictures of Swedish and German text and translate
-them into english. The app leverages [Google ML-Kit](https://developers.google.com/ml-kit) for ML functionalities like OCR, Language identification and Translation.
+them into english. The app leverages [Google ML-Kit](https://developers.google.com/ml-kit) for ML functionalities like OCR, Language identification and Translation and [CameraX](https://developer.android.com/training/camerax) for camera functionality.
 
 ## Installing the App
 
@@ -16,7 +16,7 @@ Point the camera at the text you want to translate and capture an image by click
 <figure>
     <img src="media/translation_app_example_use.gif"
          alt="A gif of using the translation app to translate an advertisement poster"
-         width = "280"
+         width = "270"
          height = "500">
     <figcaption>Translating an advertisement poster using the app</figcaption>
 </figure>
@@ -25,7 +25,7 @@ Point the camera at the text you want to translate and capture an image by click
 
 The TranslateOCRApp works in the following steps:
 
-1. **Capture Image:** The user can capture an image of the text using the app's built-in camera functionality in the `MainActivity`. Upon capturing the image, it is saved for further processing.
+1. **Capture Image:** The user can capture an image of the text using the camera functionality implemented in `MainActivity`. Upon capturing the image, it is saved for further processing.
 
 2. **Optical Character Recognition (OCR):** After the image is captured, the `PreviewActivity` is launched, where the raw image is displayed. The app then utilizes Google ML Kit's OCR capabilities provided by the `OcrHelper` class to extract all the text present in the image.
 
