@@ -3,6 +3,8 @@
 TranslateOCRApp is an Android application that allows users to click pictures of Swedish and German text and translate
 them into english. The app leverages [Google ML-Kit](https://developers.google.com/ml-kit) for ML functionalities like OCR, Language identification and Translation and [CameraX](https://developer.android.com/training/camerax) for camera functionality.
 
+This is a companion repo for by blog: [Android OCR Translation App using Kotlin and Google ML-Kit](https://jayeshmahapatra.github.io/2023/07/27/translation-app.html)
+
 ## Installing the App
 
 You can either download the apk from the [releases](https://github.com/jayeshmahapatra/TranslateOCRApp/releases) or build the apk yourself using Android Studio.
