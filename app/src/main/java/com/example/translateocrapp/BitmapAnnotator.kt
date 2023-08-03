@@ -8,12 +8,14 @@ import android.graphics.Rect
 import android.graphics.RectF
 import android.graphics.Typeface
 import android.text.TextPaint
+import android.util.Log
 import com.google.mlkit.vision.text.Text
+import kotlin.math.sqrt
 
 object BitmapAnnotator {
 
     // Function to take as input a bitmap, a map of OCR results as well as their translations, and return a bitmap annotated with translated ocr results
-    public fun annotateBitmap(bitmap: Bitmap, ocrResult: Map<Rect, Text.Line>, translatedOcrResult: Map<Rect, String>): Bitmap {
+    public fun annotateBitmap(bitmap: Bitmap, ocrResult: Map<Rect, Text.TextBlock>, translatedOcrResult: Map<Rect, String>): Bitmap {
 
         // Create a mutable copy of the bitmap
         val annotatedBitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true)
@@ -55,8 +57,30 @@ object BitmapAnnotator {
             textPaint.color = getContrastingColor(rectPaint.color)
             textPaint.typeface = Typeface.DEFAULT_BOLD
             textPaint.textSize = getTextSizeToFitRect(rectF, translatedText ?: "")
-            canvas.drawText(translatedText ?: "", rectF.left, rectF.bottom, textPaint)
 
+            // log text size
+            Log.d("BitmapAnnotator", "text size: ${textPaint.textSize}")
+
+            // Get approx char per line using the width of the rectF
+            // Do an integer division to get the number of chars per line
+            val averageCharWidth = textPaint.measureText(translatedText) / translatedText!!.length
+            val approxCharsPerLine = (rectF.width() / averageCharWidth).toInt()
+
+
+            Log.d("BitmapAnnotator", "rectF width: ${rectF.width()}")
+            Log.d("BitmapAnnotator", "textPaint.measureText(\"A\"): ${textPaint.measureText("A")}")
+            Log.d("BitmapAnnotator", "approxCharsPerLine: $approxCharsPerLine")
+
+            // Split the translated text into lines each with approxCharsPerLine chars
+            val translatedTextLines = translatedText?.chunked(approxCharsPerLine) ?: listOf("")
+
+            // Draw each line of the translated text on the bitmap in rect coordinates
+            // Start from top left
+            var currentY = rectF.top + textPaint.textSize
+            for (line in translatedTextLines) {
+                canvas.drawText(line, rectF.left, currentY, textPaint)
+                currentY += textPaint.textSize
+            }
 
         }
 
@@ -103,17 +127,23 @@ object BitmapAnnotator {
         return if (luminance > 0.5) Color.BLACK else Color.WHITE
     }
 
-    // Helper function to calculate the text size that fits within the given rectangle
-    private fun getTextSizeToFitRect(rect: RectF, text: String): Float {
-        val textPaint = Paint()
-        textPaint.textSize = 100f
-        var textSize = textPaint.textSize
+    // Helper function to calculate the text size that fits within the given rectangle (takes into account warping of the text)
+    private fun getTextSizeToFitRect(rect: RectF, text: String, tolerance: Float = 0.9f): Float {
 
-        while (textPaint.measureText(text) > rect.width() && textSize > 0) {
-            textSize -= 1f
-            textPaint.textSize = textSize
-        }
 
-        return textSize
+        // Area of the rectangle
+        val targetArea = (rect.width() * rect.height()) * tolerance
+
+        // Number of characters in the text
+        val textLength = text.length
+
+        // Area of a single character
+        val singleCharacterArea = targetArea / textLength
+
+        // Get an estimate of the text size such that the area of a character is equal to singleCharacterArea
+        // Assuming equal size for all characters, aspect ratio of a character is 0.5
+        val estimatedTextSize = sqrt(singleCharacterArea / 0.5f)
+
+        return estimatedTextSize
     }
 }

@@ -49,7 +49,7 @@ class PreviewActivity : AppCompatActivity() {
     private val textTranslator = TextTranslator(this)
 
     // Create a variable to store the OCR result
-    private lateinit var ocrResultMap: Map<Rect, Text.Line>
+    private lateinit var ocrResultMap: Map<Rect, Text.TextBlock>
 
     // Create a variable to store the language detected
     private lateinit var languageCode: String
@@ -151,10 +151,11 @@ class PreviewActivity : AppCompatActivity() {
     }
 
     // Create a function to process the OCR result
-    private fun processOcrResult(ocrResultMap: Map<Rect, Text.Line>) {
+    private fun processOcrResult(ocrResultMap: Map<Rect, Text.TextBlock>) {
         // Log the OCR result with Rect and text
-        for ((rect, textLine) in ocrResultMap) {
-            Log.d("OCR", "Found text ${textLine.text} at $rect")
+        for ((rect, textBlock) in ocrResultMap) {
+            Log.d("OCR", "Found text ${textBlock.text} at $rect")
+
         }
 
     }
