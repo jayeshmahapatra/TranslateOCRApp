@@ -8,7 +8,6 @@ import android.graphics.Rect
 import android.graphics.RectF
 import android.graphics.Typeface
 import android.text.TextPaint
-import android.util.Log
 import com.google.mlkit.vision.text.Text
 import kotlin.math.sqrt
 
@@ -58,18 +57,10 @@ object BitmapAnnotator {
             textPaint.typeface = Typeface.DEFAULT_BOLD
             textPaint.textSize = getTextSizeToFitRect(rectF, translatedText ?: "")
 
-            // log text size
-            Log.d("BitmapAnnotator", "text size: ${textPaint.textSize}")
-
             // Get approx char per line using the width of the rectF
             // Do an integer division to get the number of chars per line
             val averageCharWidth = textPaint.measureText(translatedText) / translatedText!!.length
             val approxCharsPerLine = (rectF.width() / averageCharWidth).toInt()
-
-
-            Log.d("BitmapAnnotator", "rectF width: ${rectF.width()}")
-            Log.d("BitmapAnnotator", "textPaint.measureText(\"A\"): ${textPaint.measureText("A")}")
-            Log.d("BitmapAnnotator", "approxCharsPerLine: $approxCharsPerLine")
 
             // Split the translated text into lines each with approxCharsPerLine chars
             val translatedTextLines = translatedText?.chunked(approxCharsPerLine) ?: listOf("")
