@@ -23,7 +23,7 @@ class LanguageRecognizer {
         languageIdentifierClient = LanguageIdentification.getClient(languageIdentifierOptions)
     }
 
-    fun recognizeLanguage(ocrMap: Map<Rect, Text.Line>): String {
+    fun recognizeLanguage(ocrMap: Map<Rect, Text.TextBlock>): String {
 
         // Iterate through the map of OCR results and recognize the language of each line
         // Find the most common language that is either German or Swedish
@@ -33,9 +33,9 @@ class LanguageRecognizer {
         val languageMap = mutableMapOf<Rect, String>()
 
         // Iterate through the map of OCR results
-        for ((rect, line) in ocrMap) {
+        for ((rect, textBlock) in ocrMap) {
             // Get the text from the line
-            val text = line.text
+            val text = textBlock.text
 
             // Create a task to recognize the language of the line
             val task: Task<String> = languageIdentifierClient.identifyLanguage(text)
