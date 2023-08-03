@@ -25,7 +25,7 @@ class LanguageRecognizer {
 
     fun recognizeLanguage(ocrMap: Map<Rect, Text.TextBlock>): String {
 
-        // Iterate through the map of OCR results and recognize the language of each line
+        // Iterate through the map of OCR results and recognize the language of each textBlock
         // Find the most common language that is either German or Swedish
         // if neither German nor Swedish is found, return "und"
 
@@ -34,16 +34,16 @@ class LanguageRecognizer {
 
         // Iterate through the map of OCR results
         for ((rect, textBlock) in ocrMap) {
-            // Get the text from the line
+            // Get the text from the textBlock
             val text = textBlock.text
 
-            // Create a task to recognize the language of the line
+            // Create a task to recognize the language of the textBlock
             val task: Task<String> = languageIdentifierClient.identifyLanguage(text)
 
             // Wait for the task to complete
             val result = Tasks.await(task)
 
-            // Store the language of the line in the map
+            // Store the language of the textBlock in the map
             languageMap[rect] = result
         }
 

@@ -154,16 +154,16 @@ class TextTranslator(private val context: Context) {
     }
 
     // Create a function to translate ocr result
-    fun translateOcrResult(ocrResult: Map<Rect, Text.Line>, languageCode: String ): Map<Rect, String> {
+    fun translateOcrResult(ocrResult: Map<Rect, Text.TextBlock>, languageCode: String ): Map<Rect, String> {
 
         // Create a map to store the translated result
         val translatedResult = mutableMapOf<Rect, String>()
 
         // Iterate through the ocr result
-        for ((rect, line) in ocrResult) {
+        for ((rect, textBlock) in ocrResult) {
 
-            // Translate the line to english
-            val translatedText = translateTextToEnglish(line.text, languageCode)
+            // Translate the textBlock text to english
+            val translatedText = translateTextToEnglish(textBlock.text, languageCode)
 
             // Add the translated text to the map
             translatedResult[rect] = translatedText
